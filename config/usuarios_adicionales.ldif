@@ -1,0 +1,54 @@
+# Archivo LDIF para agregar más usuarios después de la inicialización
+# Uso: ldapadd -x -D "cn=admin,dc=ejemplo,dc=com" -W -f usuarios_adicionales.ldif
+
+# Usuario de prueba 1
+dn: cn=test.user1,ou=people,dc=ejemplo,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: test.user1
+sn: User1
+givenName: Test
+displayName: Test User1
+uid: test.user1
+uidNumber: 10005
+gidNumber: 10005
+homeDirectory: /home/test.user1
+loginShell: /bin/bash
+mail: test.user1@ejemplo.com
+telephoneNumber: +1-555-0005
+title: Usuario de Prueba
+departmentNumber: IT
+employeeNumber: EMP005
+# Contraseña: password123
+userPassword: {SSHA}pSV8zyV57nNRn2RMJ4z1TukmN2WJDXQ=
+
+# Usuario de prueba 2
+dn: cn=test.user2,ou=people,dc=ejemplo,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: test.user2
+sn: User2
+givenName: Test
+displayName: Test User2
+uid: test.user2
+uidNumber: 10006
+gidNumber: 10006
+homeDirectory: /home/test.user2
+loginShell: /bin/bash
+mail: test.user2@ejemplo.com
+telephoneNumber: +1-555-0006
+title: Usuario de Prueba
+departmentNumber: HR
+employeeNumber: EMP006
+# Contraseña: password123
+userPassword: {SSHA}pSV8zyV57nNRn2RMJ4z1TukmN2WJDXQ=
+
+# Grupo adicional
+dn: cn=testers,ou=groups,dc=ejemplo,dc=com
+objectClass: groupOfNames
+cn: testers
+description: Grupo de usuarios de prueba
+member: cn=test.user1,ou=people,dc=ejemplo,dc=com
+member: cn=test.user2,ou=people,dc=ejemplo,dc=com

@@ -1,0 +1,96 @@
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col">
+            <div class="card shadow-custom">
+                <div class="card-header bg-gradient-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                            <span class="h4 mb-0">Error <%= error.status || 500 %></span>
+                        </div>
+                        <div class="text-end">
+                            <small>LDAP Admin Web</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body text-center py-5">
+                    <h1 class="display-4 text-muted mb-4">
+                        <i class="fas fa-robot"></i>
+                    </h1>
+                    <h2 class="h3 mb-3">¡Oops! Algo salió mal</h2>
+                    <p class="lead text-muted mb-4">
+                        <%= message || 'Ha ocurrido un error inesperado' %>
+                    </p>
+                    
+                    <% if (error.status === 404) { %>
+                        <p class="text-muted mb-4">
+                            La página que busca no existe o ha sido movida.
+                        </p>
+                    <% } else if (error.status === 403) { %>
+                        <p class="text-muted mb-4">
+                            No tiene permisos para acceder a este recurso.
+                        </p>
+                    <% } else if (error.status === 401) { %>
+                        <p class="text-muted mb-4">
+                            Su sesión ha expirado. Por favor, inicie sesión nuevamente.
+                        </p>
+                    <% } else { %>
+                        <p class="text-muted mb-4">
+                            Por favor, intente nuevamente más tarde.
+                        </p>
+                    <% } %>
+                    
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="d-grid gap-2">
+                                <% if (error.status === 401) { %>
+                                    <a href="/auth/login" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Iniciar Sesión
+                                    </a>
+                                <% } else { %>
+                                    <button onclick="history.back()" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-arrow-left me-2"></i>
+                                        Volver
+                                    </button>
+                                <% } %>
+                                <a href="/dashboard" class="btn btn-outline-secondary">
+                                    <i class="fas fa-home me-2"></i>
+                                    Ir al Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <% if (error.stack && process.env.NODE_ENV === 'development') { %>
+                <div class="card-footer bg-light">
+                    <details>
+                        <summary class="text-muted small mb-2" style="cursor: pointer;">
+                            <i class="fas fa-bug me-2"></i>
+                            Detalles técnicos (desarrollo)
+                        </summary>
+                        <pre class="small text-muted"><%= error.stack %></pre>
+                    </details>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.display-4 {
+    font-size: 4rem;
+}
+
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 3rem;
+    }
+    
+    .card-body {
+        padding: 2rem 1rem;
+    }
+}
+</style>

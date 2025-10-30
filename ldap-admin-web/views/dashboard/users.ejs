@@ -1,0 +1,339 @@
+<!-- Header -->
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-users me-2 text-primary"></i>
+                Gestión de Usuarios LDAP
+            </h1>
+            <p class="text-muted">Administre usuarios del directorio LDAP</p>
+        </div>
+        <div class="col-auto">
+            <a href="/dashboard/users/add" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Agregar Usuario
+            </a>
+        </div>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" action="/dashboard/users" class="row g-3">
+                <div class="col-auto">
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           value="<%= search || '' %>" 
+                           placeholder="Buscar usuarios...">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search me-2"></i>Buscar
+                    </button>
+                </div>
+                <% if (search) { %>
+                <div class="col-auto">
+                    <a href="/dashboard/users" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Limpiar
+                    </a>
+                </div>
+                <% } %>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <small class="text-muted">
+                <% if (users && users.length > 0) { %>
+                    Mostrando <%= users.length %> usuario(s)
+                    <% if (search) { %>para "<%= search %>"<% } %>
+                <% } %>
+            </small>
+        </div>
+    </div>
+
+    <!-- Lista de usuarios -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Usuarios
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <% if (locals.error) { %>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <%= error %>
+                        </div>
+                    <% } %>
+
+                    <% if (users && users.length > 0) { %>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Nombre Completo</th>
+                                        <th>Email</th>
+                                        <th>Título</th>
+                                        <th>Departamento</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% users.filter(user => user && user.cn).forEach(user => { %>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm me-3">
+                                                    <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                                </div>
+                                                <div>
+                                                    <strong><%= user.cn %></strong>
+                                                    <br>
+                                                    <small class="text-muted">uid: <%= user.uid || user.cn %></small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <%= user.displayName || (user.givenName + ' ' + user.sn) || '-' %>
+                                        </td>
+                                        <td>
+                                            <% if (user.mail) { %>
+                                                <a href="mailto:<%= user.mail %>" class="text-decoration-none">
+                                                    <i class="fas fa-envelope me-1"></i>
+                                                    <%= user.mail %>
+                                                </a>
+                                            <% } else { %>
+                                                <span class="text-muted">-</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <%= user.title || '-' %>
+                                        </td>
+                                        <td>
+                                            <% if (user.departmentNumber) { %>
+                                                <span class="badge bg-info">
+                                                    <%= user.departmentNumber %>
+                                                </span>
+                                            <% } else { %>
+                                                <span class="text-muted">-</span>
+                                            <% } %>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="/dashboard/users/view/<%= encodeURIComponent(user.dn) %>" 
+                                                   class="btn btn-outline-primary"
+                                                   title="Ver detalles">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="/dashboard/users/edit/<%= encodeURIComponent(user.dn) %>" 
+                                                   class="btn btn-outline-warning"
+                                                   title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn btn-outline-danger delete-user-btn"
+                                                        title="Eliminar"
+                                                        data-user-name="<%= user.cn %>"
+                                                        data-user-email="<%= user.mail || 'Sin email' %>"
+                                                        data-user-dn="<%= user.dn %>">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        <% if (pagination && (pagination.page > 1 || pagination.hasMore)) { %>
+                        <nav aria-label="Paginación de usuarios" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <% if (pagination.page > 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= pagination.page - 1 %><% if (search) { %>&search=<%= encodeURIComponent(search) %><% } %>">
+                                            <i class="fas fa-chevron-left"></i> Anterior
+                                        </a>
+                                    </li>
+                                <% } %>
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">Página <%= pagination.page %></span>
+                                </li>
+                                
+                                <% if (pagination.hasMore) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= pagination.page + 1 %><% if (search) { %>&search=<%= encodeURIComponent(search) %><% } %>">
+                                            Siguiente <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                <% } %>
+                            </ul>
+                        </nav>
+                        <% } %>
+
+                    <% } else { %>
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">
+                                <% if (search) { %>
+                                    No se encontraron usuarios para "<%= search %>"
+                                <% } else { %>
+                                    No hay usuarios en el sistema
+                                <% } %>
+                            </h5>
+                            <% if (!search) { %>
+                                <p class="text-muted mb-4">Comience agregando el primer usuario</p>
+                                <a href="/dashboard/users/add" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Agregar Usuario
+                                </a>
+                            <% } %>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Event delegation para botones de eliminar
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-user-btn')) {
+            const button = e.target.closest('.delete-user-btn');
+            const userName = button.dataset.userName;
+            const userEmail = button.dataset.userEmail;
+            const userDn = button.dataset.userDn;
+            
+            const userData = {
+                name: userName,
+                email: userEmail || 'No especificado',
+                dn: userDn
+            };
+            
+            confirmDeleteUser(userData);
+        }
+    });
+    
+    // Función de confirmación de eliminación
+    function confirmDeleteUser(userData) {
+        window.modalManager.showDeleteConfirmation(userData, function() {
+            // Mostrar modal de carga
+            const loadingModal = window.modalManager.showLoading('Eliminando Usuario', 'Procesando eliminación...');
+            
+            // Realizar eliminación
+            fetch(`/dashboard/users/delete/${encodeURIComponent(userDn)}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-HTTP-Method-Override': 'DELETE'
+                }
+            })
+            .then(response => {
+                window.modalManager.hideLoading();
+                
+                if (response.ok) {
+                    window.modalManager.showSuccess(
+                        '¡Usuario Eliminado!',
+                        'El usuario ha sido eliminado exitosamente del directorio LDAP'
+                    );
+                    
+                    // Recargar página después de 2 segundos
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(text || 'Error al eliminar usuario');
+                    });
+                }
+            })
+            .catch(error => {
+                window.modalManager.hideLoading();
+                
+                // Crear y mostrar toast de error
+                const validator = {
+                    showErrorToast: function(message) {
+                        // Crear contenedor de toasts si no existe
+                        let toastContainer = document.getElementById('toast-container');
+                        if (!toastContainer) {
+                            toastContainer = document.createElement('div');
+                            toastContainer.id = 'toast-container';
+                            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                            toastContainer.style.zIndex = '9999';
+                            document.body.appendChild(toastContainer);
+                        }
+
+                        // Crear toast
+                        const toastId = 'toast-' + Date.now();
+                        const toastHtml = `
+                            <div id="${toastId}" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        ${message}
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                                </div>
+                            </div>
+                        `;
+
+                        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+                        
+                        // Mostrar toast
+                        const toastElement = document.getElementById(toastId);
+                        const toast = new bootstrap.Toast(toastElement, {
+                            autohide: true,
+                            delay: 5000
+                        });
+                        
+                        toast.show();
+
+                        // Remover del DOM después de ocultarse
+                        toastElement.addEventListener('hidden.bs.toast', () => {
+                            toastElement.remove();
+                        });
+                    }
+                };
+                
+                validator.showErrorToast('Error: ' + error.message);
+            });
+        });
+    }
+
+    // Auto-submit search on Enter
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.form.submit();
+            }
+        });
+    }
+
+    // Mejorar UX de la búsqueda
+    let searchTimeout;
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length >= 2) {
+                searchTimeout = setTimeout(() => {
+                    // Enviar búsqueda automática después de 500ms
+                    this.form.submit();
+                }, 500);
+            } else if (query.length === 0) {
+                // Limpiar búsqueda inmediatamente si está vacía
+                setTimeout(() => {
+                    this.form.submit();
+                }, 100);
+            }
+        });
+    }
+});
+</script>

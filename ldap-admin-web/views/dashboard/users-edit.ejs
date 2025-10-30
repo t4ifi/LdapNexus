@@ -1,0 +1,166 @@
+<!-- Header -->
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-user-edit me-2 text-primary"></i>
+                Editar Usuario
+            </h1>
+            <p class="text-muted"><%= user.displayName || user.cn %></p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group" role="group">
+                <a href="/dashboard/users/view/<%= encodeURIComponent(user.dn) %>" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver
+                </a>
+                <a href="/dashboard/users" class="btn btn-outline-secondary">
+                    <i class="fas fa-list me-2"></i>Todos los Usuarios
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>Información del Usuario
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>DN:</strong> <code><%= user.dn %></code>
+                    </div>
+
+                    <form method="POST" action="/dashboard/users/edit/<%= encodeURIComponent(user.dn) %>" novalidate>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">
+                                        <i class="fas fa-user me-2"></i>Nombre *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="firstName" 
+                                           name="firstName" 
+                                           value="<%= user.givenName || '' %>"
+                                           required
+                                           placeholder="Juan">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="lastName" class="form-label">
+                                        <i class="fas fa-user me-2"></i>Apellido *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="lastName" 
+                                           name="lastName" 
+                                           value="<%= user.sn || '' %>"
+                                           required
+                                           placeholder="Pérez">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>Email
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email"
+                                   value="<%= user.mail || '' %>"
+                                   placeholder="usuario@ejemplo.com">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">
+                                        <i class="fas fa-briefcase me-2"></i>Título/Cargo
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="title" 
+                                           name="title"
+                                           value="<%= user.title || '' %>"
+                                           placeholder="Desarrollador Senior">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="department" class="form-label">
+                                        <i class="fas fa-building me-2"></i>Departamento
+                                    </label>
+                                    <select class="form-select" id="department" name="department">
+                                        <option value="">Seleccionar departamento</option>
+                                        <option value="IT" <%= user.departmentNumber === 'IT' ? 'selected' : '' %>>Tecnología (IT)</option>
+                                        <option value="HR" <%= user.departmentNumber === 'HR' ? 'selected' : '' %>>Recursos Humanos</option>
+                                        <option value="SALES" <%= user.departmentNumber === 'SALES' ? 'selected' : '' %>>Ventas</option>
+                                        <option value="MARKETING" <%= user.departmentNumber === 'MARKETING' ? 'selected' : '' %>>Marketing</option>
+                                        <option value="FINANCE" <%= user.departmentNumber === 'FINANCE' ? 'selected' : '' %>>Finanzas</option>
+                                        <option value="OPERATIONS" <%= user.departmentNumber === 'OPERATIONS' ? 'selected' : '' %>>Operaciones</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Nota:</strong> El nombre de usuario (CN) y contraseña no se pueden modificar desde esta interfaz.
+                            Para cambiar la contraseña, utilice las herramientas de administración LDAP apropiadas.
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/dashboard/users/view/<%= encodeURIComponent(user.dn) %>" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información Adicional -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Información del Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">CN:</dt>
+                                <dd class="col-sm-8"><code><%= user.cn %></code></dd>
+                                
+                                <dt class="col-sm-4">UID:</dt>
+                                <dd class="col-sm-8"><code><%= user.uid || user.cn %></code></dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Object Classes:</dt>
+                                <dd class="col-sm-8">
+                                    <% if (user.objectClass && Array.isArray(user.objectClass)) { %>
+                                        <% user.objectClass.forEach(oc => { %>
+                                            <span class="badge bg-light text-dark me-1"><%= oc %></span>
+                                        <% }) %>
+                                    <% } %>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'LDAP Admin Web' %></title>
+    
+    <!-- Meta tags de seguridad -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <!-- Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/fontawesome.min.css" rel="stylesheet">
+    
+    <!-- CSS personalizado -->
+    <link href="/css/admin.css" rel="stylesheet">
+    
+    <% if (locals.csrfToken) { %>
+    <meta name="csrf-token" content="<%= csrfToken %>">
+    <% } %>
+</head>
+<body class="<%= locals.bodyClass || '' %>">
+    <!-- Contenido principal sin navbar -->
+    <main class="guest">
+        <!-- Mensajes Flash -->
+        <% if (locals.error && Array.isArray(error) && error.length > 0) { %>
+            <div class="container mt-3">
+                <% error.forEach(function(msg) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i><%= msg %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+        
+        <% if (locals.success && Array.isArray(success) && success.length > 0) { %>
+            <div class="container mt-3">
+                <% success.forEach(function(msg) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i><%= msg %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+
+        <!-- Contenido de la página -->
+        <%- body %>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <small>
+                <%= appName || 'LDAP Admin Web' %> v<%= appVersion || '1.0.0' %> | 
+                <a href="/health" class="text-muted">Estado del Sistema</a> |
+                <a href="https://github.com" class="text-muted" target="_blank">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- JavaScript personalizado -->
+    <script src="/js/admin.js"></script>
+    
+    <!-- Scripts adicionales por página -->
+    <% if (locals.scripts) { %>
+        <% scripts.forEach(function(script) { %>
+            <script src="<%= script %>"></script>
+        <% }) %>
+    <% } %>
+</body>
+</html>

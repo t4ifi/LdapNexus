@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # Servidor OpenLDAP
+  openldap:
+    image: osixia/openldap:1.5.0
+    container_name: ldap-server
+    environment:
+      # Configuración básica del dominio
+      LDAP_ORGANISATION: "Mi Empresa"
+      LDAP_DOMAIN: "ejemplo.com"
+      LDAP_BASE_DN: "dc=ejemplo,dc=com"
+      
+      # Contraseñas de administrador
+      LDAP_ADMIN_PASSWORD: "admin123"
+      LDAP_CONFIG_PASSWORD: "config123"
+      
+      # Configuraciones adicionales
+      LDAP_READONLY_USER: "false"
+      LDAP_RFC2307BIS_SCHEMA: "false"
+      LDAP_BACKEND: "mdb"
+      LDAP_TLS: "true"
+      LDAP_TLS_CRT_FILENAME: "ldap.crt"
+      LDAP_TLS_KEY_FILENAME: "ldap.key"
+      LDAP_TLS_DH_PARAM_FILENAME: "dhparam.pem"
+      LDAP_TLS_CA_CRT_FILENAME: "ca.crt"
+      LDAP_TLS_ENFORCE: "false"
+      LDAP_TLS_CIPHER_SUITE: "SECURE256:-VERS-SSL3.0"
+      LDAP_TLS_PROTOCOL_MIN: "3.1"
+      LDAP_TLS_VERIFY_CLIENT: "demand"
+      LDAP_REPLICATION: "false"
+      KEEP_EXISTING_CONFIG: "false"
+      LDAP_REMOVE_CONFIG_AFTER_SETUP: "true"
+      LDAP_SSL_HELPER_PREFIX: "ldap"
+    
+    tty: true
+    stdin_open: true
+    volumes:
+      # Persistencia de datos
+      - ./data/ldap_data:/var/lib/ldap
+      - ./data/ldap_config:/etc/ldap/slapd.d
+      # Archivos de inicialización LDIF
+      - ./config/bootstrap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/bootstrap.ldif
+      # Certificados SSL/TLS (opcional)
+      - ./config/certs:/container/service/slapd/assets/certs
+    
+    ports:
+      - "389:389"     # Puerto LDAP no seguro
+      - "636:636"     # Puerto LDAPS (seguro)
+    
+    networks:
+      - ldap-network
+    
+    # Comando para debug (opcional)
+    command: --copy-service --loglevel debug
+
+  # Cliente LDAP para pruebas (opcional)
+  ldap-utils:
+    image: debian:bullseye-slim
+    container_name: ldap-client
+    depends_on:
+      - openldap
+    networks:
+      - ldap-network
+    volumes:
+      - ./scripts:/scripts
+    command: |
+      bash -c "
+        apt-get update && 
+        apt-get install -y ldap-utils && 
+        tail -f /dev/null
+      "
+
+  # Aplicación web de administración LDAP - LdapNexus
+  ldap-admin-web:
+    build:
+      context: ./ldap-admin-web
+      dockerfile: Dockerfile
+    image: ldap-nexus:latest
+    container_name: ldap-nexus
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      LDAP_URL: ldap://openldap:389
+      LDAP_HOST: openldap
+      LDAP_PORT: 389
+      LDAP_BASE_DN: dc=ejemplo,dc=com
+      LDAP_ADMIN_DN: cn=admin,dc=ejemplo,dc=com
+      LDAP_ADMIN_PASSWORD: admin123
+      LDAP_USER_BASE_DN: ou=people,dc=ejemplo,dc=com
+      LDAP_GROUP_BASE_DN: ou=groups,dc=ejemplo,dc=com
+      SESSION_SECRET: your-super-secret-session-key-change-in-production
+      LOG_LEVEL: info
+    ports:
+      - "3000:3000"
+    depends_on:
+      - openldap
+    networks:
+      - ldap-network
+    volumes:
+      - ./ldap-admin-web:/app
+      - /app/node_modules
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  ldap-network:
+    driver: bridge
+
+volumes:
+  ldap_data:
+  ldap_config:

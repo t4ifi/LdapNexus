@@ -1,0 +1,134 @@
+# Archivo de inicialización LDAP (LDIF)
+# Este archivo define la estructura inicial del directorio LDAP
+
+# Crear Unidades Organizacionales (OU)
+dn: ou=people,dc=ejemplo,dc=com
+objectClass: organizationalUnit
+ou: people
+description: Usuarios del sistema
+
+dn: ou=groups,dc=ejemplo,dc=com
+objectClass: organizationalUnit
+ou: groups
+description: Grupos del sistema
+
+dn: ou=departments,dc=ejemplo,dc=com
+objectClass: organizationalUnit
+ou: departments
+description: Departamentos de la empresa
+
+# Crear departamentos
+dn: ou=IT,ou=departments,dc=ejemplo,dc=com
+objectClass: organizationalUnit
+ou: IT
+description: Departamento de Tecnologías de la Información
+
+dn: ou=HR,ou=departments,dc=ejemplo,dc=com
+objectClass: organizationalUnit
+ou: HR
+description: Departamento de Recursos Humanos
+
+dn: ou=Sales,ou=departments,dc=ejemplo,dc=com
+objectClass: organizationalUnit
+ou: Sales
+description: Departamento de Ventas
+
+# Crear grupos
+dn: cn=administrators,ou=groups,dc=ejemplo,dc=com
+objectClass: groupOfNames
+cn: administrators
+description: Grupo de administradores del sistema
+member: cn=admin,dc=ejemplo,dc=com
+
+dn: cn=developers,ou=groups,dc=ejemplo,dc=com
+objectClass: groupOfNames
+cn: developers
+description: Grupo de desarrolladores
+member: cn=admin,dc=ejemplo,dc=com
+
+dn: cn=users,ou=groups,dc=ejemplo,dc=com
+objectClass: groupOfNames
+cn: users
+description: Grupo de usuarios básicos
+member: cn=admin,dc=ejemplo,dc=com
+
+# Crear usuarios de ejemplo
+dn: cn=juan.perez,ou=people,dc=ejemplo,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: juan.perez
+sn: Perez
+givenName: Juan
+displayName: Juan Perez
+uid: juan.perez
+uidNumber: 10001
+gidNumber: 10001
+homeDirectory: /home/juan.perez
+loginShell: /bin/bash
+mail: juan.perez@ejemplo.com
+telephoneNumber: +1-555-0001
+title: Desarrollador Senior
+departmentNumber: IT
+employeeNumber: EMP001
+userPassword: {SSHA}5en6G6MezRroT3XKqkdPOmY/BFQ=
+
+dn: cn=maria.garcia,ou=people,dc=ejemplo,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: maria.garcia
+sn: Garcia
+givenName: Maria
+displayName: Maria Garcia
+uid: maria.garcia
+uidNumber: 10002
+gidNumber: 10002
+homeDirectory: /home/maria.garcia
+loginShell: /bin/bash
+mail: maria.garcia@ejemplo.com
+telephoneNumber: +1-555-0002
+title: Analista de RRHH
+departmentNumber: HR
+employeeNumber: EMP002
+userPassword: {SSHA}5en6G6MezRroT3XKqkdPOmY/BFQ=
+
+dn: cn=carlos.rodriguez,ou=people,dc=ejemplo,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: carlos.rodriguez
+sn: Rodriguez
+givenName: Carlos
+displayName: Carlos Rodriguez
+uid: carlos.rodriguez
+uidNumber: 10003
+gidNumber: 10003
+homeDirectory: /home/carlos.rodriguez
+loginShell: /bin/bash
+mail: carlos.rodriguez@ejemplo.com
+telephoneNumber: +1-555-0003
+title: Ejecutivo de Ventas
+departmentNumber: Sales
+employeeNumber: EMP003
+userPassword: {SSHA}5en6G6MezRroT3XKqkdPOmY/BFQ=
+
+dn: cn=ana.martinez,ou=people,dc=ejemplo,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: ana.martinez
+sn: Martinez
+givenName: Ana
+displayName: Ana Martinez
+uid: ana.martinez
+uidNumber: 10004
+gidNumber: 10004
+homeDirectory: /home/ana.martinez
+loginShell: /bin/bash
+mail: ana.martinez@ejemplo.com
+telephoneNumber: +1-555-0004
+title: Administradora de Sistemas
+departmentNumber: IT
+employeeNumber: EMP004
+userPassword: {SSHA}5en6G6MezRroT3XKqkdPOmY/BFQ=

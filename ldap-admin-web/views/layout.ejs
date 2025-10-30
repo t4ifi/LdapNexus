@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'LDAP Admin Web' %></title>
+    
+    <!-- Meta tags de seguridad -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <!-- Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/fontawesome.min.css" rel="stylesheet">
+    
+    <!-- CSS personalizado -->
+    <link href="/css/admin.css" rel="stylesheet">
+    
+    <% if (locals.csrfToken) { %>
+    <meta name="csrf-token" content="<%= csrfToken %>">
+    <% } %>
+</head>
+<body class="<%= locals.bodyClass || '' %>">
+    <!-- Navbar -->
+    <% if (locals.isAuthenticated) { %>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-server me-2"></i>
+                LdapNexus
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link <%= currentPath === '/dashboard' ? 'active' : '' %>" href="/dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="usersDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-users"></i> Usuarios
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/dashboard/users"><i class="fas fa-list"></i> Ver Usuarios</a></li>
+                            <li><a class="dropdown-item" href="/dashboard/users/add"><i class="fas fa-plus"></i> Agregar Usuario</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/dashboard/users/search"><i class="fas fa-search"></i> Buscar</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="groupsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-layer-group"></i> Grupos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/dashboard/groups"><i class="fas fa-list"></i> Ver Grupos</a></li>
+                            <li><a class="dropdown-item" href="/dashboard/groups/add"><i class="fas fa-plus"></i> Crear Grupo</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= currentPath.startsWith('/education') ? 'active' : '' %>" href="/education">
+                            <i class="fas fa-graduation-cap"></i> Aprender LDAP
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i>
+                            <%= user ? user.displayName : 'Usuario' %>
+                            <% if (user && user.roles && user.roles.includes('admin')) { %>
+                                <span class="badge bg-warning text-dark ms-1">Admin</span>
+                            <% } %>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/auth/profile"><i class="fas fa-user"></i> Mi Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/auth/logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <% } %>
+
+    <!-- Contenido principal -->
+    <main class="<%= locals.isAuthenticated ? 'authenticated' : 'guest' %>">
+        <!-- Mensajes Flash -->
+        <% if (locals.error) { %>
+            <div class="container mt-3">
+                <% if (Array.isArray(error)) { %>
+                    <% error.forEach(function(msg) { %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i><%= msg %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+        
+        <% if (locals.success) { %>
+            <div class="container mt-3">
+                <% if (Array.isArray(success)) { %>
+                    <% success.forEach(function(msg) { %>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i><%= msg %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i><%= success %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+
+        <!-- Contenido de la página -->
+        <%- body %>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <small>
+                <%= appName || 'LDAP Admin Web' %> v<%= appVersion || '1.0.0' %> | 
+                <a href="/health" class="text-muted">Estado del Sistema</a> |
+                <a href="https://github.com" class="text-muted" target="_blank">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Sistema de validaciones y modales -->
+    <script src="/js/validations.js"></script>
+    
+    <!-- Utilidades JavaScript -->
+    <script src="/js/utils.js"></script>
+    
+    <!-- JavaScript personalizado -->
+    <script src="/js/admin.js"></script>
+    
+    <!-- Scripts adicionales por página -->
+    <% if (locals.scripts) { %>
+        <% scripts.forEach(function(script) { %>
+            <script src="<%= script %>"></script>
+        <% }) %>
+    <% } %>
+</body>
+</html>

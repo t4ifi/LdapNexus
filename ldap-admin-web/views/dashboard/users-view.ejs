@@ -1,0 +1,223 @@
+<!-- Header -->
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-user me-2 text-primary"></i>
+                Detalles del Usuario
+            </h1>
+            <p class="text-muted"><%= user.displayName || user.cn %></p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group" role="group">
+                <a href="/dashboard/users" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver
+                </a>
+                <a href="/dashboard/users/edit/<%= encodeURIComponent(user.dn) %>" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Editar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Información Personal -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>Información Personal
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">CN:</dt>
+                                <dd class="col-sm-8"><%= user.cn %></dd>
+                                
+                                <dt class="col-sm-4">UID:</dt>
+                                <dd class="col-sm-8"><%= user.uid || user.cn %></dd>
+                                
+                                <dt class="col-sm-4">Nombre:</dt>
+                                <dd class="col-sm-8"><%= user.givenName || '-' %></dd>
+                                
+                                <dt class="col-sm-4">Apellido:</dt>
+                                <dd class="col-sm-8"><%= user.sn || '-' %></dd>
+                                
+                                <dt class="col-sm-4">Nombre Completo:</dt>
+                                <dd class="col-sm-8"><%= user.displayName || '-' %></dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Email:</dt>
+                                <dd class="col-sm-8">
+                                    <% if (user.mail) { %>
+                                        <a href="mailto:<%= user.mail %>"><%= user.mail %></a>
+                                    <% } else { %>
+                                        -
+                                    <% } %>
+                                </dd>
+                                
+                                <dt class="col-sm-4">Título:</dt>
+                                <dd class="col-sm-8"><%= user.title || '-' %></dd>
+                                
+                                <dt class="col-sm-4">Departamento:</dt>
+                                <dd class="col-sm-8">
+                                    <% if (user.departmentNumber) { %>
+                                        <span class="badge bg-info"><%= user.departmentNumber %></span>
+                                    <% } else { %>
+                                        -
+                                    <% } %>
+                                </dd>
+                                
+                                <dt class="col-sm-4">DN:</dt>
+                                <dd class="col-sm-8">
+                                    <small class="text-muted font-monospace"><%= user.dn %></small>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Atributos LDAP -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Atributos LDAP
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Atributo</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% Object.keys(user).forEach(attr => { %>
+                                    <% if (attr !== 'controls' && attr !== 'messageID' && user[attr]) { %>
+                                        <tr>
+                                            <td class="font-monospace"><%= attr %></td>
+                                            <td>
+                                                <% if (Array.isArray(user[attr])) { %>
+                                                    <% user[attr].forEach((value, index) => { %>
+                                                        <span class="badge bg-light text-dark me-1"><%= value %></span>
+                                                    <% }) %>
+                                                <% } else { %>
+                                                    <%= user[attr] %>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Grupos del Usuario -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>Grupos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <% if (groups && groups.length > 0) { %>
+                        <% groups.forEach(group => { %>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-primary"><%= group.cn %></span>
+                                <small class="text-muted">
+                                    <% if (group.description) { %>
+                                        <%= group.description %>
+                                    <% } %>
+                                </small>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <p class="text-muted">Este usuario no pertenece a ningún grupo</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i>Acciones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/dashboard/users/edit/<%= encodeURIComponent(user.dn) %>" 
+                           class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>Editar Usuario
+                        </a>
+                        
+                        <button type="button" 
+                                class="btn btn-danger"
+                                onclick="confirmDelete('<%= user.cn %>', '<%= encodeURIComponent(user.dn) %>')">
+                            <i class="fas fa-trash me-2"></i>Eliminar Usuario
+                        </button>
+                        
+                        <hr>
+                        
+                        <a href="/dashboard/users" class="btn btn-secondary">
+                            <i class="fas fa-list me-2"></i>Ver Todos los Usuarios
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar el usuario <strong id="deleteUserName"></strong>?</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Esta acción no se puede deshacer y eliminará permanentemente el usuario del directorio LDAP.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Eliminar Usuario
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(userName, userDn) {
+    document.getElementById('deleteUserName').textContent = userName;
+    document.getElementById('deleteForm').action = '/dashboard/users/delete/' + userDn;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>

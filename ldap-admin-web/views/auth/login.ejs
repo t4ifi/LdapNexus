@@ -1,0 +1,229 @@
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'LDAP Admin Web' %></title>
+    
+    <!-- Meta tags de seguridad -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <!-- Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/fontawesome.min.css" rel="stylesheet">
+    
+    <!-- CSS personalizado -->
+    <link href="/css/admin.css" rel="stylesheet">
+    
+    <% if (locals.csrfToken) { %>
+    <meta name="csrf-token" content="<%= csrfToken %>">
+    <% } %>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="container-fluid">
+        <div class="row min-vh-100">
+            <!-- Panel izquierdo con información -->
+            <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center bg-primary text-white">
+                <div class="text-center">
+                    <i class="fas fa-server fa-5x mb-4 opacity-75"></i>
+                    <h2 class="display-5 fw-bold mb-4">LDAP Admin Web</h2>
+                    <p class="lead mb-4">
+                        Interfaz web segura para administración y aprendizaje de LDAP
+                    </p>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                            <h6>Seguro</h6>
+                            <small>Autenticación LDAP con sesiones seguras</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="fas fa-graduation-cap fa-2x mb-2"></i>
+                            <h6>Educativo</h6>
+                            <small>Aprende LDAP con ejemplos interactivos</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="fas fa-cogs fa-2x mb-2"></i>
+                            <h6>Completo</h6>
+                            <small>Administración completa del directorio</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel derecho con formulario de login -->
+            <div class="col-lg-6 d-flex align-items-center justify-content-center">
+                <div class="login-form-container">
+                    <!-- Mensajes Flash -->
+                    <% if (locals.error && Array.isArray(error) && error.length > 0) { %>
+                        <% error.forEach(function(msg) { %>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i><%= msg %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <% }) %>
+                    <% } %>
+                    
+                    <% if (locals.success && Array.isArray(success) && success.length > 0) { %>
+                        <% success.forEach(function(msg) { %>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i><%= msg %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <% }) %>
+                    <% } %>
+
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-circle fa-3x text-primary mb-3"></i>
+                        <h3 class="fw-bold">Iniciar Sesión</h3>
+                        <p class="text-muted">Ingrese sus credenciales LDAP</p>
+                    </div>
+
+                    <form id="loginForm" method="POST" action="/auth/login" novalidate>
+                        <% if (locals.csrfToken) { %>
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <% } %>
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user me-2"></i>Usuario
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="username" 
+                                   name="username" 
+                                   required 
+                                   autocomplete="username"
+                                   placeholder="Ingrese su nombre de usuario">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Contraseña
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control form-control-lg" 
+                                       id="password" 
+                                       name="password" 
+                                       required 
+                                       autocomplete="current-password"
+                                       placeholder="Ingrese su contraseña">
+                                <button class="btn btn-outline-secondary" 
+                                        type="button" 
+                                        id="togglePassword"
+                                        title="Mostrar/Ocultar contraseña">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                            <label class="form-check-label" for="remember">
+                                Recordar sesión (30 días)
+                            </label>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
+                                <span class="btn-text">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                                </span>
+                                <span class="btn-spinner d-none">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    Autenticando...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Información de usuarios de prueba (solo en desarrollo) -->
+                    <% if (process.env.NODE_ENV !== 'production') { %>
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-info-circle me-2"></i>Usuarios de Prueba
+                        </h6>
+                        <small class="text-muted d-block mb-1">
+                            <strong>juan.perez</strong> / password123 (Desarrollador)
+                        </small>
+                        <small class="text-muted d-block mb-1">
+                            <strong>maria.garcia</strong> / password123 (RRHH)
+                        </small>
+                        <small class="text-muted d-block">
+                            <strong>ana.martinez</strong> / password123 (Admin)
+                        </small>
+                    </div>
+                    <% } %>
+
+                    <!-- Enlaces adicionales -->
+                    <div class="text-center mt-4">
+                        <small class="text-muted">
+                            <a href="/health" class="text-decoration-none">Estado del Sistema</a> |
+                            <a href="https://github.com" class="text-decoration-none" target="_blank">
+                                Documentación
+                            </a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.login-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-form-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+@media (max-width: 991.98px) {
+    .login-container {
+        background: white;
+    }
+    
+    .login-form-container {
+        box-shadow: none;
+        padding: 1rem;
+    }
+}
+</style>
+
+<!-- Bootstrap JS -->
+<script src="/js/bootstrap.bundle.min.js"></script>
+
+<!-- JavaScript personalizado -->
+<script src="/js/admin.js"></script>
+<script src="/js/login.js"></script>
+
+</body>
+</html>

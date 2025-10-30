@@ -1,0 +1,199 @@
+<div class="container-fluid py-4">
+    <!-- Header del Dashboard -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                Dashboard LDAP
+            </h1>
+            <p class="text-muted">Bienvenido al panel de administración LDAP</p>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card">
+                <div class="stats-icon text-primary">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stats-number"><%= stats.totalUsers || 0 %></div>
+                <div class="stats-label">Usuarios Total</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card">
+                <div class="stats-icon text-success">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="stats-number"><%= stats.totalGroups || 0 %></div>
+                <div class="stats-label">Grupos Total</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card">
+                <div class="stats-icon text-warning">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="stats-number"><%= Object.keys(stats.departmentStats || {}).length %></div>
+                <div class="stats-label">Departamentos</div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card">
+                <div class="stats-icon text-info">
+                    <i class="fas fa-server"></i>
+                </div>
+                <div class="stats-number">
+                    <i class="fas fa-circle text-success pulse" style="font-size: 0.8rem;"></i>
+                </div>
+                <div class="stats-label">Estado LDAP</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Usuarios por Departamento -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Usuarios por Departamento
+                </div>
+                <div class="card-body">
+                    <% if (stats.departmentStats && Object.keys(stats.departmentStats).length > 0) { %>
+                        <% for (const [dept, count] of Object.entries(stats.departmentStats)) { %>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted"><%= dept %></span>
+                            <span class="badge bg-primary"><%= count %></span>
+                        </div>
+                        <% } %>
+                    <% } else { %>
+                        <p class="text-muted">No hay datos de departamentos disponibles</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones Rápidas -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-bolt me-2"></i>
+                    Acciones Rápidas
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <a href="/dashboard/users/add" class="btn btn-primary w-100">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Agregar Usuario
+                            </a>
+                        </div>
+                        <div class="col-sm-6">
+                            <a href="/dashboard/groups/add" class="btn btn-success w-100">
+                                <i class="fas fa-plus me-2"></i>
+                                Crear Grupo
+                            </a>
+                        </div>
+                        <div class="col-sm-6">
+                            <a href="/dashboard/users/search" class="btn btn-info w-100">
+                                <i class="fas fa-search me-2"></i>
+                                Buscar Usuarios
+                            </a>
+                        </div>
+                        <div class="col-sm-6">
+                            <a href="/education" class="btn btn-warning w-100">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                Aprender LDAP
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usuarios Recientes (si están disponibles) -->
+    <% if (recentUsers && recentUsers.length > 0) { %>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-users me-2"></i>
+                    Usuarios en el Sistema
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% recentUsers.forEach(user => { %>
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-user me-2 text-muted"></i>
+                                        <%= user.cn %>
+                                    </td>
+                                    <td><%= user.displayName || user.givenName + ' ' + user.sn %></td>
+                                    <td>
+                                        <% if (user.mail) { %>
+                                            <a href="mailto:<%= user.mail %>"><%= user.mail %></a>
+                                        <% } else { %>
+                                            <span class="text-muted">-</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <a href="/dashboard/users/view/<%= encodeURIComponent(user.dn) %>" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="/dashboard/users" class="btn btn-primary">
+                            Ver Todos los Usuarios
+                            <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% } %>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Actualizar estadísticas cada 30 segundos
+    setInterval(async function() {
+        try {
+            const response = await fetch('/api/v1/stats');
+            const stats = await response.json();
+            
+            // Actualizar números en las tarjetas
+            document.querySelectorAll('.stats-number').forEach((el, index) => {
+                if (index === 0) el.textContent = stats.totalUsers || 0;
+                if (index === 1) el.textContent = stats.totalGroups || 0;
+                if (index === 2) el.textContent = Object.keys(stats.departmentStats || {}).length;
+            });
+        } catch (error) {
+            console.warn('Error updating stats:', error);
+        }
+    }, 30000);
+});
+</script>

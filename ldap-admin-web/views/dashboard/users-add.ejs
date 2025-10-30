@@ -1,0 +1,273 @@
+<!-- Header -->
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-user-plus me-2 text-primary"></i>
+                Agregar Usuario LDAP
+            </h1>
+            <p class="text-muted">Crear un nuevo usuario en el directorio LDAP</p>
+        </div>
+        <div class="col-auto">
+            <a href="/dashboard/users" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Volver a Usuarios
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>Información del Usuario
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/dashboard/users/add" id="userForm" novalidate>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">
+                                        <i class="fas fa-user me-2"></i>Nombre de Usuario *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="username" 
+                                           name="username" 
+                                           required
+                                           placeholder="ej: juan.perez">
+                                    <div class="form-text">Será usado como CN y UID en LDAP</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">
+                                        <i class="fas fa-envelope me-2"></i>Email
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           name="email"
+                                           placeholder="usuario@ejemplo.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">
+                                        <i class="fas fa-user me-2"></i>Nombre *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="firstName" 
+                                           name="firstName" 
+                                           required
+                                           placeholder="Juan">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="lastName" class="form-label">
+                                        <i class="fas fa-user me-2"></i>Apellido *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="lastName" 
+                                           name="lastName" 
+                                           required
+                                           placeholder="Pérez">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">
+                                        <i class="fas fa-briefcase me-2"></i>Título/Cargo
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="title" 
+                                           name="title"
+                                           placeholder="Desarrollador Senior">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="department" class="form-label">
+                                        <i class="fas fa-building me-2"></i>Departamento
+                                    </label>
+                                    <select class="form-select" id="department" name="department">
+                                        <option value="">Seleccionar departamento</option>
+                                        <option value="IT">Tecnología (IT)</option>
+                                        <option value="HR">Recursos Humanos</option>
+                                        <option value="SALES">Ventas</option>
+                                        <option value="MARKETING">Marketing</option>
+                                        <option value="FINANCE">Finanzas</option>
+                                        <option value="OPERATIONS">Operaciones</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Contraseña *
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       name="password" 
+                                       required
+                                       minlength="6"
+                                       placeholder="Contraseña segura">
+                                <button class="btn btn-outline-secondary" 
+                                        type="button" 
+                                        id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Mínimo 6 caracteres</div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Información:</strong> El usuario será creado en 
+                            <code>ou=people,dc=ejemplo,dc=com</code>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/dashboard/users" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Crear Usuario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Crear validador de formulario
+    const validator = new FormValidator('userForm');
+    
+    // Configurar reglas de validación
+    validator
+        .addRule('username', [
+            { type: 'required', message: 'El nombre de usuario es obligatorio' },
+            { type: 'username', message: 'Solo letras, números, puntos, guiones y guiones bajos' },
+            { type: 'minLength', value: 3, message: 'Mínimo 3 caracteres' },
+            { type: 'maxLength', value: 50, message: 'Máximo 50 caracteres' }
+        ])
+        .addRule('email', [
+            { type: 'email', message: 'Email inválido' }
+        ])
+        .addRule('firstName', [
+            { type: 'required', message: 'El nombre es obligatorio' },
+            { type: 'minLength', value: 2, message: 'Mínimo 2 caracteres' },
+            { type: 'maxLength', value: 50, message: 'Máximo 50 caracteres' }
+        ])
+        .addRule('lastName', [
+            { type: 'required', message: 'El apellido es obligatorio' },
+            { type: 'minLength', value: 2, message: 'Mínimo 2 caracteres' },
+            { type: 'maxLength', value: 50, message: 'Máximo 50 caracteres' }
+        ])
+        .addRule('password', [
+            { type: 'required', message: 'La contraseña es obligatoria' },
+            { type: 'minLength', value: 6, message: 'Mínimo 6 caracteres' },
+            { 
+                type: 'custom', 
+                validator: (value) => /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value),
+                message: 'Debe contener mayúscula, minúscula y número'
+            }
+        ]);
+
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const password = document.getElementById('password');
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        
+        const icon = this.querySelector('i');
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+    });
+
+    // Auto-generate username from first and last name
+    function generateUsername() {
+        const firstName = document.getElementById('firstName').value.toLowerCase().trim();
+        const lastName = document.getElementById('lastName').value.toLowerCase().trim();
+        const usernameField = document.getElementById('username');
+        
+        if (firstName && lastName && !usernameField.value) {
+            const username = firstName + '.' + lastName;
+            usernameField.value = username;
+            validator.validateField(usernameField);
+        }
+    }
+
+    document.getElementById('firstName').addEventListener('blur', generateUsername);
+    document.getElementById('lastName').addEventListener('blur', generateUsername);
+
+    // Interceptar envío del formulario
+    document.getElementById('userForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!validator.validateAll()) {
+            validator.showErrorToast('Por favor corrige los errores antes de continuar');
+            return;
+        }
+
+        // Mostrar modal de carga
+        const loadingModal = window.modalManager.showLoading('Creando Usuario', 'Configurando cuenta LDAP...');
+        
+        // Envío del formulario
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            window.modalManager.hideLoading();
+            
+            if (response.ok) {
+                window.modalManager.showSuccess(
+                    '¡Usuario Creado!', 
+                    'El usuario se ha creado exitosamente en el directorio LDAP'
+                );
+                
+                // Redirigir después de cerrar el modal
+                setTimeout(() => {
+                    window.location.href = '/dashboard/users';
+                }, 2000);
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || 'Error al crear usuario');
+                });
+            }
+        })
+        .catch(error => {
+            window.modalManager.hideLoading();
+            validator.showErrorToast('Error: ' + error.message);
+        });
+    });
+
+    // Prevenir espacios en username
+    document.getElementById('username').addEventListener('keypress', function(e) {
+        if (e.key === ' ') {
+            e.preventDefault();
+        }
+    });
+});
+</script>
