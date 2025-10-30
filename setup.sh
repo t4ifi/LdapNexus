@@ -54,18 +54,18 @@ if docker ps -a | grep -q ldap-nexus || docker ps -a | grep -q ldap-server; then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${BLUE}🗑️  Eliminando contenedores anteriores...${NC}"
-        docker-compose down -v
+        docker compose down -v
         echo -e "${GREEN}✅ Contenedores eliminados${NC}"
     fi
 fi
 
 # Construir imágenes
 echo -e "${BLUE}🔨 Construyendo imágenes Docker...${NC}"
-docker-compose build
+docker compose build
 
 # Iniciar servicios
 echo -e "${BLUE}🚀 Iniciando servicios...${NC}"
-docker-compose up -d
+docker compose up -d
 
 # Esperar a que los servicios estén listos
 echo -e "${BLUE}⏳ Esperando a que los servicios estén listos...${NC}"
@@ -73,7 +73,7 @@ sleep 10
 
 # Verificar estado
 echo -e "${BLUE}🔍 Verificando estado de servicios...${NC}"
-docker-compose ps
+docker compose ps
 
 # Verificar salud de la aplicación
 echo ""

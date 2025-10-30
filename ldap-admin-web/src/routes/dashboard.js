@@ -318,4 +318,221 @@ router.post('/users/delete/:dn', ErrorMiddleware.asyncWrapper(async (req, res) =
   }
 }));
 
+// ============================================
+// RUTAS DE GRUPOS
+// ============================================
+
+// GET /dashboard/groups - Lista de grupos
+router.get('/groups', ErrorMiddleware.asyncWrapper(async (req, res) => {
+  try {
+    const filter = '(objectClass=groupOfNames)';
+    const groups = await ldapService.searchGroups(filter, ['cn', 'description', 'member']);
+    
+    // Contar miembros de cada grupo
+    const groupsWithCount = groups.map(group => ({
+      ...group,
+      memberCount: Array.isArray(group.member) ? group.member.length : (group.member ? 1 : 0)
+    }));
+    
+    res.render('dashboard/groups', {
+      title: 'Grupos - LDAP Admin',
+      groups: groupsWithCount
+    });
+  } catch (error) {
+    logger.error('Error loading groups:', error);
+    res.render('dashboard/groups', {
+      title: 'Grupos - LDAP Admin',
+      groups: [],
+      error: 'Error al cargar grupos'
+    });
+  }
+}));
+
+// GET /dashboard/groups/add - Formulario para agregar grupo
+router.get('/groups/add', ErrorMiddleware.asyncWrapper(async (req, res) => {
+  res.render('dashboard/groups-add', {
+    title: 'Agregar Grupo - LDAP Admin',
+    error: req.flash('error'),
+    success: req.flash('success')
+  });
+}));
+
+// POST /dashboard/groups/add - Crear nuevo grupo
+router.post('/groups/add', ErrorMiddleware.asyncWrapper(async (req, res) => {
+  try {
+    const { groupName, description } = req.body;
+    
+    if (!groupName || groupName.trim().length < 2) {
+      req.flash('error', 'El nombre del grupo debe tener al menos 2 caracteres');
+      return res.redirect('/dashboard/groups/add');
+    }
+    
+    // Crear el grupo en LDAP
+    const groupDN = `cn=${groupName.trim()},ou=groups,dc=ejemplo,dc=com`;
+    const groupAttributes = {
+      cn: groupName.trim()
+    };
+    
+    if (description?.trim()) {
+      groupAttributes.description = description.trim();
+    }
+    
+    await ldapService.createGroup(groupDN, groupAttributes);
+    
+    req.flash('success', `Grupo ${groupName} creado exitosamente`);
+    res.redirect('/dashboard/groups');
+  } catch (error) {
+    logger.error('Error creating group:', error);
+    req.flash('error', 'Error al crear el grupo: ' + error.message);
+    res.redirect('/dashboard/groups/add');
+  }
+}));
+
+// GET /dashboard/groups/view/:dn - Ver detalles de grupo
+router.get('/groups/view/:dn', ErrorMiddleware.asyncWrapper(async (req, res) => {
+  try {
+    const groupDN = decodeURIComponent(req.params.dn);
+    const group = await ldapService.getGroupByDN(groupDN);
+    
+    if (!group) {
+      req.flash('error', 'Grupo no encontrado');
+      return res.redirect('/dashboard/groups');
+    }
+    
+    // Obtener información de los miembros
+    let members = [];
+    if (group.member) {
+      const memberDNs = Array.isArray(group.member) ? group.member : [group.member];
+      
+      for (const memberDN of memberDNs) {
+        try {
+          const user = await ldapService.getUserByDN(memberDN);
+          if (user) {
+            members.push(user);
+          }
+        } catch (err) {
+          // Usuario no encontrado o error, continuar
+          logger.warn('Could not load member:', memberDN, err.message);
+        }
+      }
+    }
+    
+    res.render('dashboard/groups-view', {
+      title: `Grupo: ${group.cn} - LDAP Admin`,
+      group,
+      members
+    });
+  } catch (error) {
+    logger.error('Error loading group:', error);
+    req.flash('error', 'Error al cargar el grupo');
+    res.redirect('/dashboard/groups');
+  }
+}));
+
+// GET /dashboard/groups/edit/:dn - Formulario para editar grupo
+router.get('/groups/edit/:dn', ErrorMiddleware.asyncWrapper(async (req, res) => {
+  try {
+    const groupDN = decodeURIComponent(req.params.dn);
+    const group = await ldapService.getGroupByDN(groupDN);
+    
+    if (!group) {
+      req.flash('error', 'Grupo no encontrado');
+      return res.redirect('/dashboard/groups');
+    }
+    
+    res.render('dashboard/groups-edit', {
+      title: `Editar Grupo: ${group.cn} - LDAP Admin`,
+      group,
+      error: req.flash('error'),
+      success: req.flash('success')
+    });
+  } catch (error) {
+    logger.error('Error loading group for edit:', error);
+    req.flash('error', 'Error al cargar el grupo');
+    res.redirect('/dashboard/groups');
+  }
+}));
+
+// POST /dashboard/groups/edit/:dn - Actualizar grupo
+router.post('/groups/edit/:dn', ErrorMiddleware.asyncWrapper(async (req, res) => {
+  try {
+    const groupDN = decodeURIComponent(req.params.dn);
+    const { description } = req.body;
+    
+    const updates = {};
+    if (description !== undefined) {
+      updates.description = description.trim() || [];
+    }
+    
+    await ldapService.updateGroup(groupDN, updates);
+    
+    req.flash('success', 'Grupo actualizado exitosamente');
+    res.redirect(`/dashboard/groups/view/${encodeURIComponent(groupDN)}`);
+  } catch (error) {
+    logger.error('Error updating group:', error);
+    req.flash('error', 'Error al actualizar el grupo: ' + error.message);
+    res.redirect(`/dashboard/groups/edit/${encodeURIComponent(req.params.dn)}`);
+  }
+}));
+
+// POST /dashboard/groups/delete/:dn - Eliminar grupo
+router.post('/groups/delete/:dn', ErrorMiddleware.asyncWrapper(async (req, res) => {
+  try {
+    const groupDN = decodeURIComponent(req.params.dn);
+    
+    await ldapService.deleteGroup(groupDN);
+    
+    req.flash('success', 'Grupo eliminado exitosamente');
+    res.redirect('/dashboard/groups');
+  } catch (error) {
+    logger.error('Error deleting group:', error);
+    req.flash('error', 'Error al eliminar el grupo: ' + error.message);
+    res.redirect('/dashboard/groups');
+  }
+}));
+
+// POST /dashboard/groups/:groupDn/members/add - Agregar usuario a grupo
+router.post('/groups/:groupDn/members/add', ErrorMiddleware.asyncWrapper(async (req, res) => {
+  try {
+    const groupDN = decodeURIComponent(req.params.groupDn);
+    const { userDN } = req.body;
+    
+    if (!userDN) {
+      req.flash('error', 'Debe seleccionar un usuario');
+      return res.redirect(`/dashboard/groups/view/${encodeURIComponent(groupDN)}`);
+    }
+    
+    await ldapService.addUserToGroup(groupDN, userDN);
+    
+    req.flash('success', 'Usuario agregado al grupo exitosamente');
+    res.redirect(`/dashboard/groups/view/${encodeURIComponent(groupDN)}`);
+  } catch (error) {
+    logger.error('Error adding user to group:', error);
+    req.flash('error', 'Error al agregar usuario al grupo: ' + error.message);
+    res.redirect(`/dashboard/groups/view/${encodeURIComponent(req.params.groupDn)}`);
+  }
+}));
+
+// POST /dashboard/groups/:groupDn/members/remove - Remover usuario de grupo
+router.post('/groups/:groupDn/members/remove', ErrorMiddleware.asyncWrapper(async (req, res) => {
+  try {
+    const groupDN = decodeURIComponent(req.params.groupDn);
+    const { userDN } = req.body;
+    
+    if (!userDN) {
+      req.flash('error', 'Debe especificar un usuario');
+      return res.redirect(`/dashboard/groups/view/${encodeURIComponent(groupDN)}`);
+    }
+    
+    await ldapService.removeUserFromGroup(groupDN, userDN);
+    
+    req.flash('success', 'Usuario removido del grupo exitosamente');
+    res.redirect(`/dashboard/groups/view/${encodeURIComponent(groupDN)}`);
+  } catch (error) {
+    logger.error('Error removing user from group:', error);
+    req.flash('error', 'Error al remover usuario del grupo: ' + error.message);
+    res.redirect(`/dashboard/groups/view/${encodeURIComponent(req.params.groupDn)}`);
+  }
+}));
+
 module.exports = router;

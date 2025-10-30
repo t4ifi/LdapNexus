@@ -171,7 +171,12 @@ class LDAPService {
 
           const entries = [];
           res.on('searchEntry', (entry) => {
-            entries.push(entry.object);
+            if (entry && entry.object) {
+              const user = entry.object;
+              // Asegurar que el DN esté incluido
+              user.dn = entry.objectName || entry.dn;
+              entries.push(user);
+            }
           });
 
           res.on('error', (err) => {
@@ -214,7 +219,12 @@ class LDAPService {
 
           const entries = [];
           res.on('searchEntry', (entry) => {
-            entries.push(entry.object);
+            if (entry && entry.object) {
+              const group = entry.object;
+              // Asegurar que el DN esté incluido
+              group.dn = entry.objectName || entry.dn;
+              entries.push(group);
+            }
           });
 
           res.on('error', (err) => {
@@ -434,6 +444,7 @@ class LDAPService {
   async getUserByDN(userDN) {
     try {
       await this.bindAsAdmin();
+      const client = await this.getClient();
       
       const searchOptions = {
         scope: 'base',
@@ -441,26 +452,36 @@ class LDAPService {
         attributes: ['*']
       };
       
-      const searchResult = await this.client.search(userDN, searchOptions);
-      
       return new Promise((resolve, reject) => {
-        let user = null;
-        
-        searchResult.on('searchEntry', (entry) => {
-          user = this.parseUserEntry(entry);
-        });
-        
-        searchResult.on('error', (error) => {
-          logger.ldap.error('getUserByDN', error);
-          reject(error);
-        });
-        
-        searchResult.on('end', () => {
-          resolve(user);
+        client.search(userDN, searchOptions, (err, res) => {
+          if (err) {
+            logger.ldap.error('getUserByDN_search', err, { dn: userDN });
+            reject(err);
+            return;
+          }
+
+          let user = null;
+          
+          res.on('searchEntry', (entry) => {
+            user = entry.object;
+            user.dn = userDN; // Asegurar que el DN esté incluido
+          });
+          
+          res.on('error', (error) => {
+            logger.ldap.error('getUserByDN_result', error, { dn: userDN });
+            reject(error);
+          });
+          
+          res.on('end', () => {
+            if (user) {
+              logger.ldap.search(userDN, 'base', 1);
+            }
+            resolve(user);
+          });
         });
       });
     } catch (error) {
-      logger.ldap.error('getUserByDN', error);
+      logger.ldap.error('getUserByDN', error, { dn: userDN });
       throw error;
     }
   }
@@ -548,6 +569,227 @@ class LDAPService {
     } catch (error) {
       logger.ldap.error('deleteUser', error);
       throw error;
+    }
+  }
+
+  // Crear un nuevo grupo
+  async createGroup(groupDN, attributes) {
+    try {
+      await this.bindAsAdmin();
+      
+      const entry = {
+        objectClass: ['groupOfNames', 'top'],
+        ...attributes,
+        // Asegurar que siempre haya al menos un miembro (requerido por groupOfNames)
+        member: attributes.member || config.ldap.adminDN
+      };
+      
+      return new Promise((resolve, reject) => {
+        this.client.add(groupDN, entry, (error) => {
+          if (error) {
+            logger.ldap.error('createGroup', error, { dn: groupDN });
+            reject(error);
+          } else {
+            logger.ldap.operation('createGroup', `Grupo creado: ${groupDN}`);
+            resolve(true);
+          }
+        });
+      });
+    } catch (error) {
+      logger.ldap.error('createGroup', error, { dn: groupDN });
+      throw error;
+    }
+  }
+
+  // Obtener grupo por DN
+  async getGroupByDN(groupDN) {
+    try {
+      await this.bindAsAdmin();
+      const client = await this.getClient();
+      
+      const searchOptions = {
+        scope: 'base',
+        filter: '(objectClass=groupOfNames)',
+        attributes: ['*']
+      };
+      
+      return new Promise((resolve, reject) => {
+        client.search(groupDN, searchOptions, (err, res) => {
+          if (err) {
+            logger.ldap.error('getGroupByDN_search', err, { dn: groupDN });
+            reject(err);
+            return;
+          }
+
+          let group = null;
+          
+          res.on('searchEntry', (entry) => {
+            group = entry.object;
+            group.dn = groupDN;
+          });
+          
+          res.on('error', (error) => {
+            logger.ldap.error('getGroupByDN_result', error, { dn: groupDN });
+            reject(error);
+          });
+          
+          res.on('end', () => {
+            resolve(group);
+          });
+        });
+      });
+    } catch (error) {
+      logger.ldap.error('getGroupByDN', error, { dn: groupDN });
+      throw error;
+    }
+  }
+
+  // Actualizar grupo
+  async updateGroup(groupDN, updates) {
+    try {
+      await this.bindAsAdmin();
+      
+      const changes = [];
+      for (const [attr, value] of Object.entries(updates)) {
+        if (value !== undefined && attr !== 'member') {
+          const modification = {
+            operation: 'replace',
+            modification: {}
+          };
+          modification.modification[attr] = Array.isArray(value) ? value : [value];
+          changes.push(modification);
+        }
+      }
+      
+      if (changes.length === 0) {
+        return true;
+      }
+      
+      return new Promise((resolve, reject) => {
+        this.client.modify(groupDN, changes, (error) => {
+          if (error) {
+            logger.ldap.error('updateGroup', error, { dn: groupDN });
+            reject(error);
+          } else {
+            logger.ldap.operation('updateGroup', `Grupo actualizado: ${groupDN}`);
+            resolve(true);
+          }
+        });
+      });
+    } catch (error) {
+      logger.ldap.error('updateGroup', error, { dn: groupDN });
+      throw error;
+    }
+  }
+
+  // Eliminar grupo
+  async deleteGroup(groupDN) {
+    try {
+      await this.bindAsAdmin();
+      
+      return new Promise((resolve, reject) => {
+        this.client.del(groupDN, (error) => {
+          if (error) {
+            logger.ldap.error('deleteGroup', error, { dn: groupDN });
+            reject(error);
+          } else {
+            logger.ldap.operation('deleteGroup', `Grupo eliminado: ${groupDN}`);
+            resolve(true);
+          }
+        });
+      });
+    } catch (error) {
+      logger.ldap.error('deleteGroup', error, { dn: groupDN });
+      throw error;
+    }
+  }
+
+  // Agregar usuario a grupo
+  async addUserToGroup(groupDN, userDN) {
+    try {
+      await this.bindAsAdmin();
+      
+      const change = {
+        operation: 'add',
+        modification: {
+          member: userDN
+        }
+      };
+      
+      return new Promise((resolve, reject) => {
+        this.client.modify(groupDN, change, (error) => {
+          if (error) {
+            logger.ldap.error('addUserToGroup', error, { groupDN, userDN });
+            reject(error);
+          } else {
+            logger.ldap.operation('addUserToGroup', `Usuario ${userDN} agregado a ${groupDN}`);
+            resolve(true);
+          }
+        });
+      });
+    } catch (error) {
+      logger.ldap.error('addUserToGroup', error, { groupDN, userDN });
+      throw error;
+    }
+  }
+
+  // Remover usuario de grupo
+  async removeUserFromGroup(groupDN, userDN) {
+    try {
+      await this.bindAsAdmin();
+      
+      const change = {
+        operation: 'delete',
+        modification: {
+          member: userDN
+        }
+      };
+      
+      return new Promise((resolve, reject) => {
+        this.client.modify(groupDN, change, (error) => {
+          if (error) {
+            logger.ldap.error('removeUserFromGroup', error, { groupDN, userDN });
+            reject(error);
+          } else {
+            logger.ldap.operation('removeUserFromGroup', `Usuario ${userDN} removido de ${groupDN}`);
+            resolve(true);
+          }
+        });
+      });
+    } catch (error) {
+      logger.ldap.error('removeUserFromGroup', error, { groupDN, userDN });
+      throw error;
+    }
+  }
+
+  // Obtener todos los departamentos
+  async getAllDepartments() {
+    try {
+      const users = await this.searchUsers('(departmentNumber=*)', ['departmentNumber']);
+      const departments = new Set();
+      
+      users.forEach(user => {
+        if (user.departmentNumber) {
+          departments.add(user.departmentNumber);
+        }
+      });
+      
+      return Array.from(departments).sort();
+    } catch (error) {
+      logger.ldap.error('getAllDepartments', error);
+      throw error;
+    }
+  }
+
+  // Obtener grupos de un usuario
+  async getUserGroups(userDN) {
+    try {
+      const filter = `(&(objectClass=groupOfNames)(member=${userDN}))`;
+      const groups = await this.searchGroups(filter, ['cn', 'description']);
+      return groups.filter(group => group && group.cn);
+    } catch (error) {
+      logger.ldap.error('getUserGroups', error, { userDN });
+      return [];
     }
   }
 }

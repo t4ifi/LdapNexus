@@ -1,0 +1,145 @@
+<!-- Header -->
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-users me-2 text-primary"></i>
+                Grupos LDAP
+            </h1>
+            <p class="text-muted">Gestión de grupos del directorio</p>
+        </div>
+        <div class="col-auto">
+            <a href="/dashboard/groups/add" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nuevo Grupo
+            </a>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <%= error %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+
+    <!-- Lista de Grupos -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>
+                Lista de Grupos (<%= groups.length %>)
+            </h5>
+        </div>
+        <div class="card-body">
+            <% if (groups && groups.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-users me-2"></i>Nombre del Grupo</th>
+                                <th><i class="fas fa-align-left me-2"></i>Descripción</th>
+                                <th class="text-center"><i class="fas fa-user-friends me-2"></i>Miembros</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% groups.forEach(group => { %>
+                                <tr>
+                                    <td>
+                                        <strong><%= group.cn %></strong><br>
+                                        <small class="text-muted font-monospace"><%= group.dn %></small>
+                                    </td>
+                                    <td>
+                                        <% if (group.description) { %>
+                                            <%= group.description %>
+                                        <% } else { %>
+                                            <span class="text-muted">Sin descripción</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary rounded-pill">
+                                            <%= group.memberCount || 0 %>
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group" role="group">
+                                            <a href="/dashboard/groups/view/<%= encodeURIComponent(group.dn) %>" 
+                                               class="btn btn-sm btn-info"
+                                               title="Ver detalles">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="/dashboard/groups/edit/<%= encodeURIComponent(group.dn) %>" 
+                                               class="btn btn-sm btn-warning"
+                                               title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="confirmDelete('<%= group.cn %>', '<%= encodeURIComponent(group.dn) %>')"
+                                                    title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="text-center py-5">
+                    <i class="fas fa-users text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-muted">No hay grupos disponibles</h4>
+                    <p class="text-muted">Comienza creando un nuevo grupo</p>
+                    <a href="/dashboard/groups/add" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus me-2"></i>Crear Primer Grupo
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar el grupo <strong id="deleteGroupName"></strong>?</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Esta acción no se puede deshacer y eliminará permanentemente el grupo del directorio LDAP.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Eliminar Grupo
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(groupName, groupDn) {
+    document.getElementById('deleteGroupName').textContent = groupName;
+    document.getElementById('deleteForm').action = '/dashboard/groups/delete/' + groupDn;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>

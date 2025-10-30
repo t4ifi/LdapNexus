@@ -1,0 +1,101 @@
+<!-- Header -->
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-plus-circle me-2 text-primary"></i>
+                Nuevo Grupo
+            </h1>
+            <p class="text-muted">Crear un nuevo grupo en el directorio LDAP</p>
+        </div>
+        <div class="col-auto">
+            <a href="/dashboard/groups" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>Información del Grupo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/dashboard/groups/add" id="addGroupForm" novalidate>
+                        <div class="mb-3">
+                            <label for="groupName" class="form-label">
+                                <i class="fas fa-tag me-2"></i>Nombre del Grupo *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="groupName" 
+                                   name="groupName" 
+                                   required
+                                   minlength="2"
+                                   pattern="[a-zA-Z0-9_-]+"
+                                   placeholder="desarrolladores">
+                            <div class="invalid-feedback">
+                                El nombre del grupo debe tener al menos 2 caracteres y solo puede contener letras, números, guiones y guiones bajos.
+                            </div>
+                            <small class="form-text text-muted">
+                                Solo letras, números, guiones (-) y guiones bajos (_). Ejemplo: desarrolladores, admin-users
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-align-left me-2"></i>Descripción
+                            </label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="3"
+                                      placeholder="Breve descripción del grupo y su propósito..."></textarea>
+                            <small class="form-text text-muted">
+                                Opcional: Una descripción que ayude a identificar el propósito del grupo
+                            </small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Nota:</strong> El grupo se creará en: <code>cn=[nombre],ou=groups,dc=ejemplo,dc=com</code>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Importante:</strong> Los miembros se pueden agregar después de crear el grupo.
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/dashboard/groups" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Crear Grupo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validación del formulario
+(function() {
+    'use strict';
+    const form = document.getElementById('addGroupForm');
+    
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    }, false);
+})();
+</script>

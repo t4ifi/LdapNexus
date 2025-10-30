@@ -1,0 +1,270 @@
+<!-- Header -->
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-users me-2 text-primary"></i>
+                Detalles del Grupo
+            </h1>
+            <p class="text-muted"><%= group.cn %></p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group" role="group">
+                <a href="/dashboard/groups" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver
+                </a>
+                <a href="/dashboard/groups/edit/<%= encodeURIComponent(group.dn) %>" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Editar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Información del Grupo -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Información del Grupo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Nombre (CN):</dt>
+                        <dd class="col-sm-9"><code><%= group.cn %></code></dd>
+                        
+                        <dt class="col-sm-3">Descripción:</dt>
+                        <dd class="col-sm-9">
+                            <% if (group.description) { %>
+                                <%= group.description %>
+                            <% } else { %>
+                                <span class="text-muted">Sin descripción</span>
+                            <% } %>
+                        </dd>
+                        
+                        <dt class="col-sm-3">DN:</dt>
+                        <dd class="col-sm-9">
+                            <small class="text-muted font-monospace"><%= group.dn %></small>
+                        </dd>
+                        
+                        <dt class="col-sm-3">Total Miembros:</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-primary rounded-pill">
+                                <%= members.length %>
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Miembros del Grupo -->
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-friends me-2"></i>Miembros del Grupo
+                    </h5>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+                        <i class="fas fa-user-plus me-2"></i>Agregar Miembro
+                    </button>
+                </div>
+                <div class="card-body">
+                    <% if (members && members.length > 0) { %>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Email</th>
+                                        <th>Departamento</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% members.forEach(member => { %>
+                                        <tr>
+                                            <td>
+                                                <strong><%= member.displayName || member.cn %></strong><br>
+                                                <small class="text-muted"><%= member.uid || member.cn %></small>
+                                            </td>
+                                            <td>
+                                                <% if (member.mail) { %>
+                                                    <a href="mailto:<%= member.mail %>"><%= member.mail %></a>
+                                                <% } else { %>
+                                                    <span class="text-muted">-</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <% if (member.departmentNumber) { %>
+                                                    <span class="badge bg-info"><%= member.departmentNumber %></span>
+                                                <% } else { %>
+                                                    <span class="text-muted">-</span>
+                                                <% } %>
+                                            </td>
+                                            <td class="text-end">
+                                                <form method="POST" 
+                                                      action="/dashboard/groups/<%= encodeURIComponent(group.dn) %>/members/remove" 
+                                                      style="display: inline;">
+                                                    <input type="hidden" name="userDN" value="<%= member.dn %>">
+                                                    <button type="submit" 
+                                                            class="btn btn-sm btn-danger"
+                                                            onclick="return confirm('¿Remover a <%= member.displayName || member.cn %> del grupo?')">
+                                                        <i class="fas fa-user-minus"></i> Remover
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-slash text-muted" style="font-size: 3rem;"></i>
+                            <p class="mt-3 text-muted">Este grupo no tiene miembros</p>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+                                <i class="fas fa-user-plus me-2"></i>Agregar Primer Miembro
+                            </button>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Acciones -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i>Acciones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/dashboard/groups/edit/<%= encodeURIComponent(group.dn) %>" 
+                           class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>Editar Grupo
+                        </a>
+                        
+                        <button type="button" 
+                                class="btn btn-danger"
+                                onclick="confirmDelete('<%= group.cn %>', '<%= encodeURIComponent(group.dn) %>')">
+                            <i class="fas fa-trash me-2"></i>Eliminar Grupo
+                        </button>
+                        
+                        <hr>
+                        
+                        <a href="/dashboard/groups" class="btn btn-secondary">
+                            <i class="fas fa-list me-2"></i>Ver Todos los Grupos
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información Técnica -->
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Información Técnica
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-6">Object Classes:</dt>
+                        <dd class="col-sm-6">
+                            <% if (group.objectClass && Array.isArray(group.objectClass)) { %>
+                                <% group.objectClass.forEach(oc => { %>
+                                    <span class="badge bg-light text-dark d-block mb-1"><%= oc %></span>
+                                <% }) %>
+                            <% } %>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar miembro -->
+<div class="modal fade" id="addMemberModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>Agregar Miembro al Grupo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/dashboard/groups/<%= encodeURIComponent(group.dn) %>/members/add">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="userDN" class="form-label">Seleccionar Usuario</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="userDN" 
+                               name="userDN" 
+                               required
+                               placeholder="cn=usuario,ou=people,dc=ejemplo,dc=com">
+                        <small class="form-text text-muted">
+                            Ingrese el DN completo del usuario
+                        </small>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Tip:</strong> Puedes encontrar el DN de un usuario en su página de detalles.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Agregar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar el grupo <strong id="deleteGroupName"></strong>?</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Esta acción no se puede deshacer y eliminará permanentemente el grupo del directorio LDAP.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Eliminar Grupo
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(groupName, groupDn) {
+    document.getElementById('deleteGroupName').textContent = groupName;
+    document.getElementById('deleteForm').action = '/dashboard/groups/delete/' + groupDn;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>

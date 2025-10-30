@@ -1,0 +1,109 @@
+<!-- Header -->
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-edit me-2 text-primary"></i>
+                Editar Grupo
+            </h1>
+            <p class="text-muted"><%= group.cn %></p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group" role="group">
+                <a href="/dashboard/groups/view/<%= encodeURIComponent(group.dn) %>" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver
+                </a>
+                <a href="/dashboard/groups" class="btn btn-outline-secondary">
+                    <i class="fas fa-list me-2"></i>Todos los Grupos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>Información del Grupo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>DN:</strong> <code><%= group.dn %></code>
+                    </div>
+
+                    <form method="POST" action="/dashboard/groups/edit/<%= encodeURIComponent(group.dn) %>" novalidate>
+                        <div class="mb-3">
+                            <label for="groupName" class="form-label">
+                                <i class="fas fa-tag me-2"></i>Nombre del Grupo
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="groupName" 
+                                   value="<%= group.cn %>"
+                                   disabled
+                                   readonly>
+                            <small class="form-text text-muted">
+                                El nombre del grupo (CN) no se puede modificar
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-align-left me-2"></i>Descripción
+                            </label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="3"
+                                      placeholder="Breve descripción del grupo y su propósito..."><%= group.description || '' %></textarea>
+                            <small class="form-text text-muted">
+                                Descripción opcional del grupo
+                            </small>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Nota:</strong> Los miembros del grupo se gestionan desde la página de detalles del grupo.
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/dashboard/groups/view/<%= encodeURIComponent(group.dn) %>" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información Adicional -->
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Información del Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">CN:</dt>
+                        <dd class="col-sm-8"><code><%= group.cn %></code></dd>
+                        
+                        <dt class="col-sm-4">Object Classes:</dt>
+                        <dd class="col-sm-8">
+                            <% if (group.objectClass && Array.isArray(group.objectClass)) { %>
+                                <% group.objectClass.forEach(oc => { %>
+                                    <span class="badge bg-light text-dark me-1"><%= oc %></span>
+                                <% }) %>
+                            <% } %>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
